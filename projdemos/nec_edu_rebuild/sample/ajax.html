@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Ajax test</title>
+    <script src="../scripts/md5.min.js"></script>
+    <script src="../scripts/core.js"></script>
+</head>
+
+<body>
+    <script>
+    // var uTools = {};
+
+    // ! function() {
+    //     'use strict';
+    //     if (typeof Array.prototype.forEach != 'function') {
+    //         Array.prototype.forEach = function(fn) {
+    //             var arr = Object(this),
+    //                 i = 0,
+    //                 len = 0;
+    //             if (Object.prototype.toString.call(arr).slice(8, -1) != 'Array') {
+    //                 console.log('Error: Array.prototype.indexOf - the caller must be an array!');
+    //             }
+    //             if (!(len = arr.length)) return;
+    //             do {
+    //                 fn(arr[i], i, arr);
+    //             } while (++i < len);
+    //             fn = null;
+    //             arr = null;
+    //         }
+    //     }
+    // }();
+
+    // ! function($) {
+    //     $.fn = {
+    //         isNumeric: function(val) {
+    //             if (typeof val == 'object') return false; // except object
+    //             if (typeof val != 'number') return false; // except true, false, null, undefined
+    //             if (!isFinite(val)) return false; // except undefined, NaN, Infinity
+    //             return true;
+    //         }
+    //     };
+    // }(uTools);
+    /*************************
+    The Promise
+    source: https://www.promisejs.org/implementing/
+     *************************/
+    // ! function($) {
+    //     var PENDING = 0,
+    //         FULFILLED = 1,
+    //         REJECTED = 2;
+
+    //     function Promise(fn) {
+    //         // store state which can be PENDING, FULFILLED or REJECTED
+    //         var state = PENDING;
+    //         // store value once FULFILLED or REJECTED
+    //         var value = null;
+    //         // store success and failure handlers
+    //         var handlers = [];
+
+    //         function getThen(value) {
+    //             var t = typeof value,
+    //                 then;
+    //             if (value && (t == 'object' || t == 'function')) {
+    //                 then = value.then;
+    //                 if (typeof then == 'function') {
+    //                     return then;
+    //                 }
+    //             }
+    //             return null;
+    //         }
+
+    //         function doResolve(fn, onFulfilled, onRejected) {
+    //             var done = false;
+    //             try {
+    //                 fn(function(value) {
+    //                     if (done) return;
+    //                     done = true;
+    //                     onFulfilled(value);
+    //                 }, function(reason) {
+    //                     if (done) return;
+    //                     done = true;
+    //                     onRejected(reason);
+    //                 });
+    //             } catch (e) {
+    //                 if (done) return;
+    //                 done = true;
+    //                 onRejected(e);
+    //             }
+    //         }
+
+    //         function fulfill(result) {
+    //             state = FULFILLED;
+    //             value = result;
+    //             handlers.forEach(handle);
+    //             handlers = null;
+    //         }
+
+    //         function reject(error) {
+    //             state = REJECTED;
+    //             value = error;
+    //             handlers.forEach(handle);
+    //             handlers = null;
+    //         }
+
+    //         function resolve(result) {
+    //             try {
+    //                 var then = getThen(result);
+    //                 if (then) {
+    //                     doResolve(then.bind(result), resolve, reject);
+    //                     return;
+    //                 }
+    //                 fulfill(result);
+    //             } catch (e) {
+    //                 reject(e);
+    //             }
+    //         }
+
+    //         function handle(handler) {
+    //             if (state === PENDING) {
+    //                 handlers.push(handler);
+    //             } else {
+    //                 if (state === FULFILLED && typeof handler.onFulfilled == 'function') {
+    //                     handler.onFulfilled(value);
+    //                 }
+    //                 if (state === REJECTED && typeof handler.onRejected == 'function') {
+    //                     handler.onRejected(value);
+    //                 }
+    //             }
+    //         }
+    //         this.done = function(onFulfilled, onRejected) {
+    //             // wait for vacant of thread
+    //             setTimeout(function() {
+    //                 handle({
+    //                     onFulfilled: onFulfilled,
+    //                     onRejected: onRejected
+    //                 });
+    //             }, 0);
+    //         };
+    //         this.then = function(onFulfilled, onRejected) {
+    //             var self = this;
+    //             return new Promise(function(resolve, reject) {
+    //                 return self.done(function(result) {
+    //                     if (typeof onFulfilled == 'function') {
+    //                         try {
+    //                             return resolve(onFulfilled(result));
+    //                         } catch (e) {
+    //                             return reject(e);
+    //                         }
+    //                     } else {
+    //                         return resolve(result);
+    //                     }
+    //                 }, function(error) {
+    //                     if (typeof onRejected == 'function') {
+    //                         try {
+    //                             return resolve(onRejected(error));
+    //                         } catch (e) {
+    //                             return reject(e);
+    //                         }
+    //                     } else {
+    //                         return reject(error);
+    //                     }
+    //                 });
+    //             })
+    //         };
+    //         doResolve(fn, resolve, reject);
+    //     }
+    //     $.Promise = Promise;
+    // }(uTools);
+    /************************
+        Ajax communication
+     ***********************/
+    ! function($) {
+        // // serialize the query string
+        // function serialize(dataObj) {
+        //     var n, v,
+        //         pairs = [];
+        //     // process null or undefined
+        //     if (dataObj == null) return '';
+        //     for (p in dataObj) {
+        //         v = dataObj[p];
+        //         if (!dataObj.hasOwnProperty(p) ||
+        //             typeof v == 'function' ||
+        //             typeof v == 'object') {
+        //             continue;
+        //         }
+        //         v = v.toString();
+        //         n = encodeURIComponent(p);
+        //         v = encodeURIComponent(v);
+        //         pairs.push(n + '=' + v);
+        //     }
+        //     return pairs.join('&');
+        // }
+        // // detect the XMLHttpRequest whether support CORS
+        // function isXhrSupportCors() {
+        //     try {
+        //         return typeof XMLHttpRequest != 'undefined' && ('withCredentials' in new XMLHttpRequest());
+        //     } catch (e) {
+        //         return false;
+        //     }
+        // }
+        // // Ajax encapsulation
+        // // @param {string} [url]
+        // // @param {object} [opt]
+        // // opt: {
+        // //   method: {sring},
+        // //   success: {function},
+        // //   fail: {function},
+        // //   data: {object},
+        // //   timestamp: {boolean},
+        // //   otherfields
+        // // }
+        // function ajax(url, opt) {
+        //     var xhr, queryUri, method, success, fail, timestamp, data, isSupport;
+        //     var err = false;
+        //     if (opt && typeof opt == 'object') {
+        //         if (typeof opt.success == 'function') {
+        //             success = opt.success;
+        //             delete opt.success || (err = true);
+        //         }
+        //         if (typeof opt.fail == 'function') {
+        //             fail = opt.fail;
+        //             delete opt.fail || (err = true);
+        //         }
+        //         if (typeof opt.method == 'string') {
+        //             switch (opt.method.toLowerCase()) {
+        //                 case 'get':
+        //                 case 'post':
+        //                     method = opt.method;
+        //                     delete opt.method || (err = true);
+        //                     break;
+        //             }
+        //         }
+        //         if (typeof opt.timestamp == 'boolean') {
+        //             if (opt.timestamp) {
+        //                 timestamp = '&_=uTools' + +new Date();
+        //             }
+        //             delete opt.timestamp || (err = true);
+        //         }
+        //         if (typeof opt.data == 'object' && opt.data.constructor.prototype.hasOwnProperty('isPrototypeOf')) {
+        //             data = opt.data;
+        //             delete opt.data || (err = true);
+        //         }
+        //     }
+        //     if (err) return new $.Promise(function(resolve, reject) {
+        //         reject('Error: uTools.ajax - The parameter 2 contains some properties undeletable.');
+        //     });
+        //     method = method || 'get';
+        //     opt = serialize(opt) + (timestamp ? timestamp : '');
+        //     queryUri = url + (opt && opt.length > 0 ?
+        //         '?' + opt : '');
+        //     // console.log(queryUri)
+
+        //     if (isSupport = isXhrSupportCors()) {
+        //         xhr = new XMLHttpRequest();
+        //         if (xhr) {
+        //             xhr.open(method, queryUri, true);
+        //             console.log('Message: uTools.ajax - XMLHttpRequest CORS openning.');
+        //         }
+        //     } else if (typeof XDomainRequest != 'undefined') {
+        //         xhr = new XDomainRequest();
+        //         xhr.open(method, queryUri);
+        //         // to fix the IE8/9 some unexpected abort issues
+        //         xhr.onprogress = function() {return;};
+        //         xhr.ontimeout = function() {return;};
+        //         xhr.timeout = 0;
+        //         console.log('Message: uTools.ajax - XDomainRequest CORS openning.');
+        //     } else {
+        //         xhr = null;
+        //     }
+        //     if (xhr) {
+        //         console.log('Message: uTools.ajax - sending request.');
+        //         return new $.Promise(function(resolve, reject) {
+        //             var t = (typeof xhr.status != 'undefined') ? // xhr does not own status property in IE8/9
+        //                 ((xhr.status >= 200 && xhr.status < 300) || xhr.status == 304) :
+        //                 (typeof xhr.responseText != 'undefined');
+        //             xhr.onload = function() {
+        //                 if (t) {
+        //                     if (typeof success == 'function') {
+        //                         success(xhr);
+        //                     }
+        //                     resolve(xhr);
+        //                 } else {
+        //                     if (typeof fail == 'function') {
+        //                         fail(xhr);
+        //                     }
+        //                     reject(xhr);
+        //                 }
+        //             };
+        //             xhr.onerror = function() {
+        //                 if (typeof fail == 'function') {
+        //                     fail(xhr);
+        //                 }
+        //                 reject(xhr);
+        //             };
+        //             if (isSupport) {
+        //                 xhr.send(data || null);
+        //             } else {
+        //                 // to fix the IE8/9 some unexpected abort issues
+        //                 setTimeout(function() {
+        //                     xhr.send(data || null);
+        //                 }, 0);
+        //             }
+        //         });
+        //     }
+        //     return new $.Promise(function(resolve, reject) {
+        //         reject('Create XMLHttpRquest failed.');
+        //     });
+        // }
+        // $.ajax = ajax;
+        // var opt = {
+        //     format: 'json',
+        //     name: 'uolcano',
+        //     password: 'xxxx',
+        //     words: 'hodor'
+        // };
+        // console.log(serialize(opt));
+        $.ajax('http://study.163.com/webDev/login.htm', {
+                method: 'get',
+                userName: md5('studyOnline'),
+                password: md5('study.163.com'),
+                timestamp: true,
+                // success: function(xhr) {
+                //     console.log(xhr.responseText);
+                // },
+                // fail: function(xhr) {
+                //     console.log(xhr.status);
+                // }
+            })
+            .then(function(data) {
+                console.log('Success: ', data.responseText);
+            }, function(data) {
+                if (typeof data == 'object') {
+                    console.log('Error: ', data.status);
+                } else {
+                    console.log('Error: ', data);
+                }
+            });
+    }(uTools);
+    // var cache = [];
+    // window.onload = function() {
+        // ! function($) {}(uTools);
+        // var url = 'http://study.163.com/webDev/login.htm?userName=' + md5('studyOnline') + '&password=' + md5('study.163.com');
+        // console.log(url);
+        // !!!!!!!!!!!!!!!!!!XMLHttpRequest
+        // var xhr = new XMLHttpRequest();
+        // xhr.open('get', url);
+        // xhr.onload = function () {
+        //     console.log(xhr.responseText);
+        // };
+        // xhr.onerror = function () {
+        //     console.log(xhr);
+        // };
+        // xhr.send();
+        // 
+        // !!!!!!!!!!!!!!!!!XDomainRequest
+        // var xdr = new XDomainRequest();
+        // xdr.open('get', url);
+        // xdr.onload = function(){
+        //     cache.pop();
+        //     console.log('Success: ', xdr.responseText);
+        // };
+        // xdr.onprogress = function(){return;};
+        // xdr.ontimeout = function (){return;};
+        // xdr.onerror = function(){
+        //     console.log('error: ',xdr.responseText);
+        //     return;
+        // };
+        // xdr.timeout = 0;
+        // cache.push(xdr);
+        // setTimeout(function () {
+        //     xdr.send();
+        // }, 0);
+    // }
+    </script>
+</body>
+
+</html>

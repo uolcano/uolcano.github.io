@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>event advanced</title>
+</head>
+
+<body>
+    <script>
+    var uTools = {};
+    ! function($) {
+        $.fn = {
+            isNumeric: function(val) {
+                if (typeof val == 'object') return false; // exclude object
+                if (typeof val != 'number') return false; // exclude true, false, null, undefined
+                if (!isFinite(val)) return false; // exclude undefined, NaN, Infinity
+                return true;
+            },
+            chunk: function(arr, fn, intv, ctx) {
+                if (!$.fn.isArray(arr)) {
+                    console.log('Error: uTools.fn.chunk - The parameter 1 must be an array!');
+                }
+                if (!arr.length) return;
+                if (typeof fn != 'function') return;
+                if (intv != null && typeof intv != 'number') return;
+                if (ctx != null && typeof ctx != 'object') return;
+                // return a Promise for sometimes async needs
+                return new $.Promise(function(resolve, reject) {
+                    var copy = arr.slice(),
+                        idx = 0;
+                    intv = intv || 100; // if undefined or null
+                    intv = intv > 0 ? ~~intv : 0; // get the non-negative and also integer
+                    setTimeout(function recur() {
+                        var item = copy.shift();
+                        fn.call(ctx, item, idx++, copy);
+                        if (copy.length > 0) {
+                            setTimeout(recur, intv);
+                        } else {
+                            resolve('chunk complete');
+                        }
+                    }, 0);
+                });
+            },
+            lazyLoad: function(expr, fn1, fn2) {
+                if (typeof fn1 != 'function') {
+                    console.log('Error: uTools.fn.lazyLoad - The parameter 2 must be a function to be returned.');
+                }
+                if (typeof fn2 != 'function') {
+                    console.log('Error: uTools.fn.lazyLoad - The parameter 3 must be a function to be returned.');
+                }
+                if (typeof expr == 'boolean') {
+                    return expr ? fn1 : fn2;
+                } else if (typeof expr == 'function') {
+                    return expr() ? fn1 : fn2;
+                } else {
+                    console.log('Error: uTools.fn.lazyLoad - The parameter 1 should be a boolean value or a function to be called.');
+                }
+            }
+        };
+    }(uTools);
+    // Evernt wrapper
+    ! function($) {
+        function EventWrapper(objs) {
+            this.type = 'wrapped';
+            this.source = function() {
+                if (typeof objs != 'object') {
+                    console.log('Warning: EventWrapper - The parameter 1 must be an array-like.');
+                    return;
+                }
+                // undefined or null
+                if (objs.length == null) return [objs];
+                if ($.fn.isNumeric(objs.length)) {
+                    return _slice.call(objs);
+                }
+                return [];
+            }();
+        }
+        EventWrapper.prototype = {
+            constructor: EventWrapper,
+            on: function(type, fn) {
+                if (!(this instanceof EventWrapper)) {
+                    console.log('Error: EventWrapper.prototype.on - This caller is not EventWrapper instance.');
+                }
+                $.fn.chunk(this.source, function(itm) {
+                    $.ev.on(itm, type, fn);
+                }, 0);
+                return this;
+            },
+            off: function(type, fn) {
+                if (!(this instanceof EventWrapper)) {
+                    console.log('Error: EventWrapper.prototype.off - This caller is not EventWrapper instance.');
+                }
+                $.fn.chunk(this.source, function(itm) {
+                    $.ev.off(itm, type, fn);
+                }, 0);
+                return this;
+            }
+        };
+        $.ev = _create({
+            on: $.fn.lazyLoad(
+                // typeof domElm.addEventListener == 'function'
+                $.fn.lazyLoadAid('addEventListener', 'function'),
+                function(obj, type, listener) {
+                    obj.addEventListener(type, listener);
+                },
+                function(obj, type, listener) {
+                    obj.attachEvent('on' + type, listener);
+                }),
+            off: $.fn.lazyLoad(
+                // typeof domElm.removeEventListener == 'function'
+                $.fn.lazyLoadAid('removeEventListener', 'function'),
+                function(obj, type, listener) {
+                    obj.removeEventListener(type, listener);
+                },
+                function(obj, type, listener) {
+                    obj.detachEvent('on' + type, listener);
+                }),
+            // format the event object
+            format: function format(event) {
+                event = event || window.event;
+                event.target || (event.target = event.srcElement);
+                if (typeof event.preventDefault != 'function') {
+                    event.preventDefault = function() {
+                        event.returnValue = false;
+                    }
+                }
+                return event;
+            },
+            // create an EventWrapper instance
+            wrp: function wrp(objs) {
+                return new EventWrapper(objs);
+            }
+        });
+    }(uTools);
+    </script>
+</body>
+
+</html>

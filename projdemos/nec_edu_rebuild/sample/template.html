@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Template test</title>
+    <link rel="stylesheet" href="../styles/style.css">
+</head>
+
+<body>
+    <script src="../scripts/core.js"></script>
+    <script class="js-template" type="text/template" data-template-name="card">
+        <div class="course--item" data-course-id="${track.id}">
+            <div class="wrapper clearfix">
+                <div class="item--figure">
+                    <img src="${track.middlePhotoUrl}" alt="${track.name}" />
+                </div>
+                <div class="item--title">${track.name}</div>
+                <div class="item--category">${track.categoryName}</div>
+                <div class="item--learn-count"><i class="icon icon--human"></i>${track.learnerCount}</div>
+                <div class="item--price before">${track.price}</div>
+                <div class="item--provider">${track.provider}</div>
+                <div class="item--descript">${track.description}</div>
+            </div>
+        </div>
+    </script>
+    <script class="js-template" type="text/template" data-template-name="hot">
+        <li class="hot-rank--item clearfix">
+            <div class="item--figure"><img src="${track.smallPhotoUrl}" alt="${track.name}" /></div>
+            <div class="item--title">${track.name}</div>
+            <div class="item--learn-count"><i class="icon icon--human"></i>${track.learnerCount}</div>
+        </li>
+    </script>
+    <div id="card"></div>
+    <div id="hot"></div>
+    <script>
+    ! function($) {
+        var arr = $('.js-template').get();
+
+        function convert(val) {
+            var result;
+            switch (val) {
+                case null:
+                    result = '暂无';
+                    break;
+                default:
+                    result = val;
+                    break;
+            }
+            return result;
+        }
+        var opt = {
+            card: {
+                url: 'http://study.163.com/webDev/couresByCategory.htm',
+                method: 'get',
+                timestamp: true,
+                pageNo: 3,
+                psize: 6,
+                type: 20
+            },
+            hot: {
+                url: 'http://study.163.com/webDev/hotcouresByCategory.htm',
+                method: 'get',
+                timestamp: true,
+            }
+        };
+        ! function(e) {
+            var name = e.getAttribute('data-template-name');
+            var dest = $('#' + name).get(0);
+            var str = e.innerHTML; // IE8 can retrieve the innerText of a script element
+            var tmpl = $.tmpl();
+            var count = 10,
+                interval = 1000;
+            var url = opt[name].url;
+            delete opt[name].url;
+            $.ajax(url, opt[name]).then(function(xhr) {
+                var res = JSON.parse(xhr.responseText),
+                    list = res.list;
+                tmpl.putNodes(dest, str, list, convert);
+                console.log(+new Date(), 'start!!!!!');
+            }).done(function() {
+                setTimeout(function f() {
+                    opt[name].pageNo && (opt[name].pageNo = count);
+                    $.ajax(url, opt[name]).then(function(xhr) {
+                        var res = JSON.parse(xhr.responseText),
+                            list = res.list;
+                        return new $.Promise(function(resolve, reject) {
+                            console.log(+new Date(), 'Begin~~~~~~~~~~~~~~~~~~~~~~~~~');
+                            tmpl.putData(list, convert).done(function(val) {
+                                resolve(val);
+                            });
+                        });
+                    }).done(function(val) {
+                        console.log(+new Date(), '~~~~~~~~~~~~~~~~~~Done', val);
+                        if (--count) {
+                            console.log(count);
+                            setTimeout(f, interval);
+                        } else {
+                            console.log('complete')
+                            $.fn.sleep.complete = true;
+                            console.log($.fn.sleep.complete)
+                        }
+                    })
+                }, interval);
+            });
+        }(arr[0]);
+        $.fn.sleep(function(e) {
+            console.log(e)
+            var name = e.getAttribute('data-template-name');
+            var dest = $('#' + name).get(0);
+            var str = e.innerHTML;
+            var tmpl = $.tmpl();
+            var url = opt[name].url;
+            delete opt[name].url;
+            $.ajax(url, opt[name]).done(function(xhr) {
+                var list = JSON.parse(xhr.responseText)
+                tmpl.putNodes(dest, str, list, convert)
+                console.log(+new Date(), 'start!!!!!');
+            });
+        }, arr[1]);
+    }(uTools);
+    </script>
+</body>
+
+</html>

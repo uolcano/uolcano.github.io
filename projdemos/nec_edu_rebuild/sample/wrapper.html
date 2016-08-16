@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>wrapper test</title>
+    <script src="../scripts/json2.js"></script>
+    <style id="style">
+    button {}
+    </style>
+</head>
+
+<body>
+    <textarea id="txt" cols="30" rows="10">something to say</textarea>
+    <button id="btn">click</button>
+    <script src="wrapper.js"></script>
+    <script>
+    // ! function($) {
+        var btn = document.getElementById('btn'),
+            txt = document.getElementById('txt'),
+            body = document.body;
+        var $btn = $.wrp(btn),
+            $txt = $.wrp(txt),
+            $body = $.wrp(body);
+        var colors = ['#488', '#848', '#884', '#448', '#484', '#844', '#444', '#888'],
+            len = colors.length;
+        $body.on('click', function(event) {
+            var target = event.target,
+                rand = ~~(Math.random() * len);
+            // console.log(target);
+            if (target !== body) {
+                $body.source.style.backgroundColor = colors[rand];
+            }
+        });
+        $.wrp('<h3 id="parag">Bonjour Sekai</h3>').insertBefore($btn);
+        // console.log($.fn.getElms(body, '#parag')[0]);
+    // }(uTools);
+    </script>
+</body>
+
+</html>

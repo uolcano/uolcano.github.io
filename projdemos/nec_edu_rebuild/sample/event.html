@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Customized Event</title>
+</head>
+
+<body>
+    <textarea id="txt" cols="30" rows="10" value="">enter your words and click the button to copy it into your clipboard.</textarea>
+    <button id="btn">copy</button>
+    <script>
+    var ucTools = {};
+    ! function() {
+        if (typeof Function.prototype.bind != 'function') {
+            Function.prototype.bind = function(oThis) {
+                if (typeof this != 'function') {
+                    throw new TypeError('Function.prototype.bind - what is trying to be bound is not callable')
+                }
+                var slice = Array.prototype.slice;
+                var aArgs = slice.call(arguments, 1),
+                    fToBind = this;
+                return function() {
+                    fToBind.apply(oThis, aArgs.concat(slice.call(arguments)));
+                }
+            };
+        }
+
+        function getTypeOf(obj) {
+            var type = Object.prototype.toString.call(obj).slice(8, -1).toLowerCase();
+            if (type != 'object') return type;
+            if (obj.constructor &&
+                !hasOwn.call(obj, 'constructor') &&
+                !hasOwn.call(obj, 'isPrototypeOf')) {
+                return obj.constructor.toString().match(/function\s*([^\(\s]*)/)[1].toLowerCase();
+            }
+        }
+
+        function isArray(obj) {
+            return getTypeOf(obj) == 'array';
+        }
+        if (typeof Array.prototype.forEach != 'function') {
+            Array.prototype.forEach = function(fn) {
+                var arr = Object(this),
+                    i = 0,
+                    len = 0;
+                if (!isArray(arr)) {
+                    throw new TypeError('Argument must be an array!');
+                }
+                if (!(len = arr.length)) return;
+                do {
+                    fn(arr[i], i, arr);
+                } while (++i < len);
+                fn = null;
+                arr = null;
+            }
+        }
+    }();
+    ! function($) {
+        function EventWrapper(obj) {
+            this.handlers = {};
+            this.source = obj;
+        }
+        var preventDefault = function() {
+            this.preventDefault ?
+                this.preventDefault() :
+                this.returnValue = false;
+        };
+        var addHandler = function(elm, type, handler) {
+            elm.addEventListener ?
+                elm.addEventListener(type, handler) :
+                elm.attachEvent ?
+                elm.attachEvent('on' + type, handler) :
+                console.log('Your DOM events is too low level.');
+        };
+        var removeHandler = function(elm, type, handler) {
+            elm.removeEventListener ?
+                elm.removeEventListener(type, handler) :
+                elm.detachEvent ?
+                elm.detachEvent('on' + type, handler) :
+                console.log('Your DOM events is too low level.');
+        };
+        EventWrapper.prototype = {
+            constructor: EventWrapper,
+            fire: function(){},
+            add: function(type, handler) {
+                if (!(this instanceof EventWrapper)) {
+                    throw TypeError('This object is not EventWrapper instance.');
+                }
+                if (typeof this.handlers[type] == 'undefined') {
+                    this.handlers[type] = [];
+                    this.fire = this.trigger.bind(this);
+                    this.source.addEventListener ?
+                        this.source.addEventListener(type, this.fire) :
+                        this.source.attachEvent('on' + type, this.fire);
+                }
+                this.handlers[type].push(handler);
+                return this;
+            },
+            remove: function(type, handler) {
+                var idx = -1;
+                if (!(this instanceof EventWrapper)) {
+                    throw TypeError('This object is not EventWrapper instance.');
+                }
+                if (typeof this.handlers[type] == 'undefined') {
+                    console.log('This handler had not been added.');
+                } else {
+                    idx = this.handlers[type].indexOf(handler);
+                    this.handlers[type].splice(idx, 1);
+                }
+                if (!this.handlers[type].length) {
+                    // this.removeAll(type);
+                }
+                return this;
+            },
+            removeAll: function(type) {
+                this.source.removeEventListener ?
+                    this.source.removeEventListener(type, this.fire) :
+                    this.source.detachEvent('on' + type, this.fire);
+            },
+            trigger: function(event) {
+                event = event || window.event;
+                event.target || (event.target = event.srcElement);
+                event.preventDefault = preventDefault;
+                console.log(event.target, this)
+                this.handlers[event.type].forEach(function(item) {
+                    item(event);
+                });
+                return this;
+            }
+        };
+        $.EventWrapper = EventWrapper;
+    }(ucTools);
+    ! function($) {
+        var getCalculatedStyle = function(domElm) {
+            return window.getComputedStyle ?
+                window.getComputedStyle(domElm) :
+                domElm.currentStyle;
+        };
+        var btn = document.getElementById('btn'),
+            txt = document.getElementById('txt');
+        var mod = 10;
+        // console.log(btn);
+        // console.log(txt);
+        var $btn = new $.EventWrapper(btn);
+        // console.log($btn);
+
+        function foo(event) {
+            var target = event.target;
+            // console.log(event, event.target, event.target.style);
+            var style = getCalculatedStyle(target);
+            // console.log(style.borderColor);
+            var bdW = parseFloat(style.borderWidth);
+            var bdC = style.borderColor.match(/rgb\((\d{1,3})\,\s(\d{1,3})\,\s(\d{1,3})\)/) || style.borderColor.match(/^#([\da-f]+)$/) || [];
+            // console.log(bdC);
+            var temp = 0;
+            target.style.borderWidth = ++bdW % mod;
+            if (bdC.length == 3) {
+                target.style.borderColor = 'rgb(' + (bdC[1] += 11) % 255 + ',' + (bdC[2] += 13) % 255 + ',' + (bdC[3] += 17) % 255 + ')';
+            } else {
+                temp = parseInt(bdC[1], 16);
+                // console.log(temp)
+                temp += 0x102132;
+                // console.log(temp)
+                temp = (temp % 0xffffff).toString(16);
+                if (temp.length < 6) {
+                    var diff = 6 - temp.length;
+                    do {
+                        temp = '0' + temp;
+                    } while (--diff > 0);
+                }
+                // console.log(temp)
+                target.style.borderColor = '#' + temp;
+            }
+            if (txt.value.length) {
+                btn.textContent = 'copy';
+                txt.select();
+                document.execCommand('copy');
+                txt.value = '';
+            } else {
+                console.log('you can enter some words.')
+                btn.textContent = 'enter';
+            }
+        }
+        $btn.add('click', foo);
+        var colors = ['#488', '#848', '#884', '#448', '#484', '#844', '#444', '#888'];
+        $btn.add('click', function(event) {
+            var bg = document.getElementsByTagName('html')[0].style;
+            var len = colors.length;
+            var rand = ~~(Math.random() * len);
+            // console.log(rand, colors[rand]);
+            bg.backgroundColor = colors[rand];
+        })
+    }(ucTools);
+    </script>
+</body>
+
+</html>

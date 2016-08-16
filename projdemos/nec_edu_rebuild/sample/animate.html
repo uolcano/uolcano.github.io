@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Animate function implementation</title>
+    <script src="../scripts/json2.js"></script>
+    <style>
+    #rect {
+        position: absolute;
+        width: 100px;
+        height: 100px;
+        left: 100px;
+        top: 0;
+        background-color: #0fa;
+    }
+    </style>
+</head>
+
+<body>
+    <script src="../scripts/core.js"></script>
+    <div id="rect"></div>
+    <script>
+    ! function($) {
+        // !attention: you must explicitly setting the initial css property value in IE,
+        //             otherwise, the corresponding property animation will not work
+
+        // @description: simply parse the position and size property
+        // @param:  {object} [css]     // the final style on the DOM element
+        // @param:  {string} [prop]    // the specific css property
+        function parseValue(css, prop) {
+            var m1, m2, k, v,
+                r1 = /^(top|right|bottom|left|width|height)$/,
+                r2 = /(\d+)(px)?/;
+            // r3 = /(margin|padding|border)(\w*)/,
+            // directions = ['top', 'right', 'bottom', 'left'];
+
+            if (m1 = prop.match(r1)) {
+                v = css[prop] + '';
+                if (m2 = v.match(r2)) {
+                    return +m2[1]; // get the number
+                }
+            }
+        }
+        // @descript: do the animation effects
+        // @param:  {DOM}    [domElm]  // the DOM element to animate effect
+        // @param:  {object} [css]     // the final style on the DOM element
+        // @param:  {fnction}[fx]      // the easing effect function
+        // @param:  {number} [step]    // the steps to finish the animation
+        // @param:  {number} [duration]// the duration to finish the animation
+        // 
+        function doAnima(domElm, css, fx, step, duration) {
+            var p, start, end, dir, diff, intv, count,
+                styles = [],
+                curStyle = $.dom.getStyle(domElm);
+            step = step || 100;
+            duration = duration || 3000;
+            intv = ~~(duration / step); // get the integer interval time
+            for (p in css) {
+                if (css.hasOwnProperty(p)) {
+                    end = parseValue(css, p);
+                    if (end == null) {
+                        // set the css directly if no return
+                        domElm.style[p] = css[p];
+                    } else {
+                        // if end get valid return
+                        start = parseFloat(curStyle[p]);
+                        diff = end - start;
+                        if (!diff) continue;
+                        dir = diff > 0 ? 1 : -1;
+                        styles.push({
+                            prop: p,
+                            start: start,
+                            end: end,
+                            diff: diff,
+                            dir: dir
+                        });
+                    }
+                }
+            }
+
+            count = 0;
+            if (styles.length) {
+                setTimeout(function f() {
+                    styles.forEach(function(s) {
+                        var space = fx(s.start, s.diff, step, count);
+                        if (s.dir > 0 ? space < s.end : space > s.end) {
+                            domElm.style[s.prop] = space + 'px';
+                        } else {
+                            domElm.style[s.prop] = s.end + 'px';
+                            console.log('Message: animate - animation completed.');
+                        }
+                    });
+                    console.log(step, count);
+                    count++;
+                    if (count <= step) {
+                        setTimeout(f, intv);
+                    }
+                }, intv);
+            }
+            curStyle = css = null;
+            return domElm;
+        }
+        /********* the easing effect function **************/
+        function linear(a, b, c, x) {
+            return +(a + b * x / c).toFixed(4);
+        }
+
+        function ease(a, b, c, x) {
+            return +(a + b * ((Math.sin((Math.PI / 2) * (2 * x / c - 1)) + 1) / 2).toFixed(4));
+        }
+
+        function easeOut(a, b, c, x) {
+            return +(a + b * (Math.sin((Math.PI / 2) * (x / c))).toFixed(4));
+        }
+
+        function easeIn(a, b, c, x) {
+            return +(a + b * (Math.sin((Math.PI / 2) * (x / c - 1)) + 1).toFixed(4));
+        }
+        // demonstration
+        // doAnima($('#rect').get(0), {
+        //     left: 800,
+        //     top: 300
+        // }, ease);
+
+        // use the encapsulated animate
+        var rect = $('#rect').get(0);
+        $.fx.animate(rect, {
+            left: 800,
+            top: '100px',
+            width: 150,
+            height: '70'
+        }, 'ease').done(function (val) {
+             $.fx.animate(rect, {
+                left: 150,
+                top: 300,
+                width: 50,
+                height: 100
+             }, 'ease');
+        })
+    }(uTools);
+    </script>
+</body>
+
+</html>

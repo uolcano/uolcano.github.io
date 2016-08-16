@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Optimize function</title>
+    <style>
+    #txt {
+        /* width:  100px; */
+        height: 50px;
+        background-color: #0fa;
+    }
+    </style>
+</head>
+
+<body>
+    <div id="txt"></div>
+    <script>
+    var uTools = {};
+    ! function($) {
+        // array chunk traversing auxiliary method 
+        function chunk(intv, arr, fn, ctx) {
+            var copy = arr.slice(),
+            idx = 0;
+            setTimeout(function f() {
+                var item = copy.shift();
+                fn.call(ctx, item, idx++, copy);
+                if (copy.length > 0) {
+                    setTimeout(f, intv);
+                }
+            }, 0);
+        }
+        // frequently process throttle method
+        function throttle(intv, fn, ctx) {
+            clearTimeout(fn.tId);
+            fn.tId = setTimeout(function() {
+                fn.call(ctx);
+            }, intv);
+        }
+        // large data traversing method
+        function advDuffLoop(arrLike, fn) {
+            var len = arrLike.length,
+                travs = ~~(len / 8),
+                left = len % 8,
+                i = 0;
+            if (left > 0) {
+                do {
+                    fn(arrLike[i++], i, arrLike);
+                } while (--left > 0);
+            }
+            do {
+                fn(arrLike[i++], i, arrLike);
+                fn(arrLike[i++], i, arrLike);
+                fn(arrLike[i++], i, arrLike);
+                fn(arrLike[i++], i, arrLike);
+                fn(arrLike[i++], i, arrLike);
+                fn(arrLike[i++], i, arrLike);
+                fn(arrLike[i++], i, arrLike);
+                fn(arrLike[i++], i, arrLike);
+            } while (--travs > 0);
+        }
+        $.opm = {
+            chunk: chunk,
+            throttle: throttle,
+            advDuffLoop: advDuffLoop
+        };
+    }(uTools);
+    ! function($) {
+        // chunk test
+        var arr = [1,2,{num:2},3,4,5,[5],{list: [6]},6,-12,{str: '7'},7,Number(8,2).toString(),8,(9).toPrecision(10),9,0xf,0,,45,4,53,453,45,34,53,45,345,0x9e];
+        // console.log(arr.length);
+        function fn (e, i, a) {
+            console.log(i, e, a);
+        };
+        $.opm.chunk(2000,arr, fn);
+        
+        // throttle test
+        // var txt = document.getElementById('txt'),
+        //     wd = 0,
+        //     left = 0,
+        //     top = 0,
+        //     parent = txt,
+        //     cnt = 10;
+        // do{
+        //     // console.log(parent);
+        //     left += parent.offsetLeft;
+        //     top += parent.offsetTop;
+        // } while ((parent = parent.parentNode)&& --cnt > 0);
+        // function resizeText () {
+        //     var width = txt.style.width;
+        //     if (window.innerWidth < 1205) {
+        //         width = '600px';
+        //     } else if (window.innerWidth < 1333) {
+        //         width = '1100px';
+        //     }
+        //     txt.style.width = width;
+        //     console.log(width);
+        // }
+        // window.onresize = function (event) {
+        //     $.opm.throttle(200, resizeText);
+        // }
+        
+        // advanced Duff loop test
+        // $.opm.advDuffLoop(arr, function(e, i, a){
+        //     console.log(i, e, a);
+        // });
+    }(uTools);
+    </script>
+</body>
+
+</html>

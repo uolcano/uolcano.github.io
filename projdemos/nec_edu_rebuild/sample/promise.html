@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Promise Test</title>
+</head>
+
+<body>
+    <script>
+    var uTools = {};
+    /*************************
+    The Promise
+    source: https://www.promisejs.org/implementing/
+     *************************/
+    ! function($) {
+        var PENDING = 0,
+            FULFILLED = 1,
+            REJECTED = 2;
+
+        function Promise(fn) {
+            // store state which can be PENDING, FULFILLED or REJECTED
+            var state = PENDING;
+            // store value once FULFILLED or REJECTED
+            var value = null;
+            // store success and failure handlers
+            var handlers = [];
+
+            function getThen(value) {
+                var t = typeof value,
+                    then;
+                if (value && (t == 'object' || t == 'function')) {
+                    then = value.then;
+                    if (typeof then == 'function') {
+                        return then;
+                    }
+                }
+                return null;
+            }
+
+            function doResolve(fn, onFulfilled, onRejected) {
+                var done = false;
+                try {
+                    fn(function(value) {
+                        if (done) return;
+                        done = true;
+                        onFulfilled(value);
+                    }, function(reason) {
+                        if (done) return;
+                        done = true;
+                        onRejected(reason);
+                    });
+                } catch (e) {
+                    if (done) return;
+                    done = true;
+                    onRejected(e);
+                }
+            }
+
+            function fulfill(result) {
+                state = FULFILLED;
+                value = result;
+                handlers.forEach(handle);
+                handlers = null;
+            }
+
+            function reject(error) {
+                state = REJECTED;
+                value = error;
+                handlers.forEach(handle);
+                handlers = null;
+            }
+
+            function resolve(result) {
+                try {
+                    var then = getThen(result);
+                    if (then) {
+                        doResolve(then.bind(result), resolve, reject);
+                        return;
+                    }
+                    fulfill(result);
+                } catch (e) {
+                    reject(e);
+                }
+            }
+
+            function handle(handler) {
+                if (state === PENDING) {
+                    handlers.push(handler);
+                } else {
+                    if (state === FULFILLED && typeof handler.onFulfilled == 'function') {
+                        handler.onFulfilled(value);
+                    }
+                    if (state === REJECTED && typeof handler.onRejected == 'function') {
+                        handler.onRejected(value);
+                    }
+                }
+            }
+            this.done = function(onFulfilled, onRejected) {
+                // wait for vacant of thread
+                setTimeout(function() {
+                    handle({
+                        onFulfilled: onFulfilled,
+                        onRejected: onRejected
+                    });
+                }, 0);
+            };
+            this.then = function(onFulfilled, onRejected) {
+                var self = this;
+                return new Promise(function(resolve, reject) {
+                    return self.done(function(result) {
+                        if (typeof onFulfilled == 'function') {
+                            try {
+                                return resolve(onFulfilled(result));
+                            } catch (e) {
+                                return reject(e);
+                            }
+                        } else {
+                            return resolve(result);
+                        }
+                    }, function(error) {
+                        if (typeof onRejected == 'function') {
+                            try {
+                                return resolve(onRejected(error));
+                            } catch (e) {
+                                return reject(e);
+                            }
+                        } else {
+                            return reject(error);
+                        }
+                    });
+                })
+            };
+            doResolve(fn, resolve, reject);
+        }
+        $.Promise = Promise;
+    }(uTools);
+    ! function($) {
+        function timeout(t, v) {
+            return new $.Promise(function(resolve, reject) {
+                setTimeout(resolve, t, v);
+            });
+        }
+        var tm = timeout(2000, 16);
+        tm.then(function(val) {
+                console.log(+new Date(), val);
+                return {value: val * 4};
+            })
+            .then(function(val) {
+                console.log(+new Date(), val);
+                return timeout(1500, typeof val == 'object' ?
+                    (val.favor = ['snacks', 'fruits', 'juice', 'vegetable', 'fitness'], val) :
+                    Math.pow(val, 2));
+            })
+            .done(function(val) {
+                console.log(+new Date(), val);
+            });
+    }(uTools);
+    </script>
+</body>
+
+</html>

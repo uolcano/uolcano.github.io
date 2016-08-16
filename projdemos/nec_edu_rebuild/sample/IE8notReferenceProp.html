@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>IE8 cross scope property access</title>
+</head>
+
+<body>
+    <script>
+    ! function(global) {
+        var $ = global.uTools = {};
+        $.fn = {
+            isIE: function(ver) {
+                var b = document.createElement('b');
+                b.innerHTML = '<!--[if IE ' + ver + ']><i></i><![endif]-->';
+                return b.getElementsByTagName('i').length === 1;
+            },
+
+            lazyLoad: function(expr, fn1, fn2) {
+                if (typeof fn1 != 'function') {
+                    console.log('Error: uTools.fn.lazyLoad - The parameter 2 must be a function to be returned.');
+                }
+                if (typeof fn2 != 'function') {
+                    console.log('Error: uTools.fn.lazyLoad - The parameter 3 must be a function to be returned.');
+                }
+                if (typeof expr == 'boolean') {
+                    return expr ? fn1 : fn2;
+                } else if (typeof expr == 'function') {
+                    return expr() ? fn1 : fn2;
+                } else {
+                    console.log('Error: uTools.fn.lazyLoad - The parameter 1 should be a boolean value or a function to be called.');
+                }
+            }
+        };
+    }(window);
+    ! function($) {
+        $.sleep = function() {
+            // return $.fn.lazyLoad(!+[1, ],
+            //     function(fn, val, intv) {
+            //         var self = arguments.callee;
+            //         // when intv is a numeric
+            //         intv = intv > 0 && intv < Number.MAX_VALUE ? intv : 500;
+            //         setTimeout(function() {
+            //             console.log(self.complete);
+            //             if (!self.complete) {
+            //                 setTimeout(arguments.callee, intv);
+            //             } else {
+            //                 fn(val);
+            //                 self.complete = false;
+            //             }
+            //         }, 0);
+            //     },
+                return function s(fn, val, intv) {
+                    // when intv is a numeric
+                    intv = intv > 0 && intv < Number.MAX_VALUE ? intv : 500;
+                    setTimeout(function t() {
+                        console.log(s.complete);
+                        if (!s.complete) {
+                            setTimeout(t, intv);
+                        } else {
+                            fn(val);
+                            console.log('fulfilled!')
+                            s.complete = false;
+                        }
+                    }, 0);
+                }
+                // );
+        }()
+    }(uTools);
+    ! function($) {
+        console.log('start')
+        setTimeout(function() {
+            $.sleep.complete = true;
+        }, 5000);
+        // console.log($.sleep)
+        $.sleep(function(val) {
+            console.log(val);
+        }, 'got it!', 500);
+    }(uTools);
+    // !function () {
+    //     function test(val) {
+    //         console.log(val)
+    //         console.log(test.prop);
+    //     }
+    //     console.log('start');
+    //     setTimeout(function () {
+    //         console.log(test.prop);
+    //         if(!test.prop) {
+    //             setTimeout(arguments.callee, 500);
+    //         } else {
+    //          test('hiya');
+    //         }
+    //     }, 0);
+    //     setTimeout(function () {
+    //          test.prop = true;
+    //          console.log(true, ' : ', test.prop)
+    //     }, 3000);
+    // }();
+    </script>
+</body>
+
+</html>

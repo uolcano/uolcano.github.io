@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>DOOM Wrapper Advanced for internel iteration</title>
+    <style>
+    .sDiv {
+        background-color: #ececec;
+        margin: 2px;
+        height: 100px;
+    }
+    </style>
+</head>
+
+<body>
+    <div class="sDiv">riu jin no ken wo ku ra e</div>
+    <div class="sDiv">riu jin no ken wo ku ra e</div>
+    <div class="sDiv">riu jin no ken wo ku ra e</div>
+    <script src="wrapper_adv.js"></script>
+    <script>
+    ! function($) {
+        // var s = document.getElementById('sDiv');
+        var s = document.querySelectorAll('.sDiv');
+        // console.log(s)
+        var $s = $.dom.wrp(s);
+        console.log($s);
+        $s.addClass('active');
+        setTimeout(function() {
+            $s.removeClass('active')
+                .css({
+                    width: '400px',
+                    height: '300px',
+                    color: 'green',
+                    padding: '10px',
+                    margin: '10px',
+                    backgroundColor: 'orange',
+                    boxShadow: '1px 1px 3px 0 #aaa',
+                    borderRadius: '5px'
+                })
+                .attr('tabindex', '0')
+                .prop('resizable', true)
+                .text($s.text() + '. The world is worth our fighting for - Mei.')
+                .data('data-courseTab-name', 'hoyber');
+        }, 3000);
+    }(uTools);
+    var div = uTools('<div></div>').appendTo('body');
+    div.css({
+        position: 'fixed',
+        top: '0',
+        right: '10px',
+        width: '100px',
+        height: '100px',
+        background: 'lime',
+        borderRadius: '5%',
+        boxShadow: '-1px 1px 5px 0 #eee'
+    });
+    var h1 = uTools('<h1>Bonjour!</h1>');
+    uTools('.sDiv+.sDiv').before(h1);
+    </script>
+</body>
+
+</html>
